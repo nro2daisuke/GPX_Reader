@@ -1,194 +1,30 @@
 <html>
 
 <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-    <script src="./scripts/leaflet.js"></script>
-    <script src="./scripts/leaflet.hotline.js"></script>
-    <link rel="stylesheet" href="./css/leaflet.css" />
-    <style>
-        #map {
-            width: 100%;
-            height: 500px;
-        }
-        
-        #footdiv {
-            margin-top: 50px;
-        }
-        
-        #selectiondiv {
-            margin-top: 10px;
-            /*display: none;*/
-        }
-    </style>
-</head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
 
 <body>
-    <div id="map" style="width:100%;height:500px"></div>
-    <div id="footdiv">
-        Load GPX<input type="file" name="inputfile" id="inputfile" accept=".gpx">
-        <div id="selectiondiv">
-            Data:&nbsp;
-            <select id="zAxis">
-				
-			</select>
-        </div>
-    </div>
-
-    <script>
-        var map;
-        map = L.map('map');
-        var osmLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-            maxZoomLevel: 19
-        });
-        var stdLayer = L.tileLayer('http://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-            attribution: "<a href='http://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
-            maxZoomLevel: 18
-        })
-        var ortLayer = L.tileLayer('http://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', {
-            attribution: "<a href='http://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>",
-            maxZoomLevel: 18
-        })
-
-        osmLayer.addTo(map);
-        stdLayer.addTo(map);
-        ortLayer.addTo(map);
-
-        var baseLayers = {
-            "地図(OpenStreetMap)": osmLayer,
-            "地図（地理院地図）": stdLayer,
-            "オルソ画像（地理院地図）": ortLayer,
-        };
-        var overlays = {};
-
-        L.control.layers(baseLayers).addTo(map);
-        L.control.scale().addTo(map);
-
-        map.setView([35.0, 135.0], 5);
-        var coords = [];
-        var hotlineLayer = L.hotline(coords, {
-            min: 150,
-            max: 350,
-            palette: {
-                0.0: '#008800',
-                0.5: '#ffff00',
-                1.0: '#ff0000'
-            },
-            weight: 5,
-            outlineColor: '#000000',
-            outlineWidth: 1
-        });
-
-        hotlineLayer.addTo(map);
-        //Add LIstener
-        document.getElementById('inputfile').addEventListener('change', function() {
-            var fr = new FileReader();
-            fr.onload = function() {
-                window.readGeojsonText = fr.result;
-                convertGPX2data(fr.result);
-            }
-            fr.readAsText(this.files[0]);
-        });
-        document.getElementById('zAxis').addEventListener('change', function() {
-            reDrawHotline();
-        });
-
-        function convertGPX2data(gpx) {
-            window.gpxdata = new Object();
-            var dom_parser = new DOMParser();
-            var dom = dom_parser.parseFromString(gpx, "application/xml");
-            var trkpts = dom.getElementsByTagName('trkpt');
-            window.gpxdata.trkpts = new Array();
-            for (var i = 0; i < trkpts.length; i++) {
-                /*      <trkpt lon="135.502514" lat="34.593867">
-                			<ele>17.967487</ele>
-                			<time>2021-12-09T03:16:52Z</time>
-                			<extensions>
-                				<speed>0.510000</speed>
-                				<course>356.484375</course>
-                				<hAcc>16.128092</hAcc>
-                				<vAcc>6.656236</vAcc>
-                			</extensions>
-                		</trkpt>
-                */
-                var trkpt = new Object();
-                trkpt.lat = trkpts[i].getAttribute('lat');
-                trkpt.lon = trkpts[i].getAttribute('lon');
-                trkpt.ele = trkpts[i].getElementsByTagName('ele')[0].innerHTML;
-                trkpt.time = trkpts[i].getElementsByTagName('time')[0].innerHTML;
-                var extensions = trkpts[i].getElementsByTagName('extensions')[0];
-                if (i == 0) {
-                    addOption("Elevetion", "ele");
-                }
-                for (var j = 0; j < extensions.childNodes.length; j++) {
-                    trkpt["" + extensions.childNodes[j].tagName] = extensions.childNodes[j].innerHTML;
-                    if (i == 0) {
-                        addOption("" + extensions.childNodes[j].tagName, "" + extensions.childNodes[j].tagName);
-                    }
-                }
-                window.gpxdata.trkpts.push(trkpt);
-            }
-            reDrawHotline();
-        }
-
-        function addOption(label, value) {
-            var option = document.createElement("option");
-            option.text = label;
-            option.value = value;
-            document.getElementById('zAxis').appendChild(option);
-            if (document.getElementById('zAxis').childNodes.length == 1) {
-                document.getElementById('zAxis').selectedindex = 1;
-            }
-        }
-
-        function reDrawHotline() {
-            //reGenerate coords
-            coords = new Array();
-            var _min = 0;
-            var _max = 0;
-            for (var i = 0; i < window.gpxdata.trkpts.length; i++) {
-                var point = new Array();
-                var trkpt = window.gpxdata.trkpts[i];
-                point.push(trkpt.lat - 0);
-                point.push(trkpt.lon - 0);
-                var selectdZ = document.getElementById('zAxis').value;
-                point.push(trkpt[selectdZ] - 0);
-
-                coords.push(point);
-
-                if (i == 0) {
-                    _min = trkpt[selectdZ] - 0;
-                    _max = trkpt[selectdZ] - 0;
-                } else {
-                    if (_min > trkpt[selectdZ] - 0) {
-                        _min = trkpt[selectdZ] - 0;
-                    }
-                    if (_max < trkpt[selectdZ] - 0) {
-                        _max = trkpt[selectdZ] - 0;
-                    }
-                }
-            }
-
-            map.removeLayer(hotlineLayer);
-            hotlineLayer = L.hotline(coords, {
-                min: _min,
-                max: _max,
-                palette: {
-                    0.0: '#008800',
-                    0.5: '#ffff00',
-                    1.0: '#ff0000'
-                },
-                weight: 5,
-                outlineColor: '#000000',
-                outlineWidth: 1
-            });
-            if (coords.length > 2) {
-                var bounds = hotlineLayer.getBounds();
-                map.fitBounds(bounds);
-            }
-            hotlineLayer.addTo(map);
-        }
-    </script>
+    <script src="./scripts/gpxMap.js" ></script>
+    Sample1 Sample1<br/>
+    <div id="gpxMap" ></div>
+    Sample2 Sample2<br/>
+    
+    <br/>
+    javascript呼び出し方法。
+    <br/>
+    <br/>
+    (1): URL 呼び出し<br/>
+    loadGPX()関数にGPXファイルのURLを与えてください
+    <br/>
+    <a href="#" onclick="loadGPX('./sampleData/route_2021-12-09_12.48pm.gpx')" >loadGPX('./sampleData/route_2021-12-09_12.48pm.gpx');</a>
+    <br/>
+    <a href="#" onclick="loadGPX('./sampleData/route_2022-04-19_6.30pm.gpx')" >loadGPX('./sampleData/route_2022-04-19_6.30pm.gpx');</a>
+    <br/>
+    <br/>
+    (2):ローカルファイル呼び出し <br/>
+    &lt;input type="file" &gt; <br/>タグを用意して  onchange="loadLocalGPX(event)" をセットする
+    <br/>
+    GPXファイルを選択<input type="file" accept=".gpx" onchange="loadLocalGPX(event)" />
 </body>
 
 </html>
