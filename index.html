@@ -1,30 +1,35 @@
 <html>
-
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-
-<body>
-    <script src="./scripts/gpxMap.js" ></script>
-    Sample1 Sample1<br/>
-    <div id="gpxMap" ></div>
-    Sample2 Sample2<br/>
-    
-    <br/>
-    javascript呼び出し方法。
-    <br/>
-    <br/>
-    (1): URL 呼び出し<br/>
-    loadGPX()関数にGPXファイルのURLを与えてください
-    <br/>
-    <a href="#" onclick="loadGPX('./sampleData/route_2021-12-09_12.48pm.gpx')" >loadGPX('./sampleData/route_2021-12-09_12.48pm.gpx');</a>
-    <br/>
-    <a href="#" onclick="loadGPX('./sampleData/route_2022-04-19_6.30pm.gpx')" >loadGPX('./sampleData/route_2022-04-19_6.30pm.gpx');</a>
-    <br/>
-    <br/>
-    (2):ローカルファイル呼び出し <br/>
-    &lt;input type="file" &gt; <br/>タグを用意して  onchange="loadLocalGPX(event)" をセットする
-    <br/>
-    GPXファイルを選択<input type="file" accept=".gpx" onchange="loadLocalGPX(event)" />
-</body>
-
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			body {
+				padding: 0;
+				margin: 0;
+			}
+			
+			html,
+			body {
+				height: 100%;
+				width: 100%;
+			}
+			
+			#gpxMap {
+				width: 100%;
+				height: calc( 100% - 65px);
+			}
+			
+			#footer {
+				position: absolute;
+				bottom: 0;
+				height: 35;
+			}
+		</style>
+		<script src="./scripts/gpxMap.js"></script>
+	</head>
+	<body>
+		<div id="gpxMap"></div>
+		<div id="footer">
+			GPXファイルを選択<input type="file" accept=".gpx" onchange="loadLocalGPX(event)" />
+		</div>
+	</body>
 </html>

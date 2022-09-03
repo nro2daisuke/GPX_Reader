@@ -27,7 +27,7 @@ var OUTLINE_COLOR = "#000000";
 var WEIGHT = 5;
 var OUTLINE_WIDTH = 1;
 var MAP_HEIGHT = "300px";
-var FOOTER_BG_COLOR ="#CCCCCC";
+var FOOTER_BG_COLOR = "#CCCCCC";
 //------------------------------------------
 
 
@@ -37,10 +37,10 @@ var map;
 
 
 //Initialize function
-function gpxMapInit(){
+function gpxMapInit() {
     //Dinamically Load dependent script
-	
-	
+
+
     //Loaded-Flags
     window.leafletLoaded = false;
     window.leafletHotlineLoaded = false;
@@ -72,21 +72,20 @@ function gpxMapInit(){
 
     //Extract map DIV
     let outer = document.getElementById('gpxMap');
-    if(outer==null){
+    if (outer == null) {
         //if no DIV detected, do nothing
         return;
     }
-    outer.setAttribute("style", "width:100%;");
 
     //Leaflet Map Div
     let lmapdiv = document.createElement("div");
     lmapdiv.id = "map";
-    lmapdiv.setAttribute("style", "width:100%;height:"+MAP_HEIGHT);
+    lmapdiv.setAttribute("style", "width:100%;height:100%");
     outer.appendChild(lmapdiv);
     //Footer div
     let footdiv = document.createElement("div");
     footdiv.id = "footdiv";
-    footdiv.setAttribute("style", "padding: 2px; background-color:"+FOOTER_BG_COLOR);
+    footdiv.setAttribute("style", "padding: 2px; background-color:" + FOOTER_BG_COLOR);
     outer.appendChild(footdiv);
     //Selection element
     let zselect = document.createElement("select");
@@ -97,30 +96,30 @@ function gpxMapInit(){
     //Legend span
     let legenddiv = document.createElement("span");
     legenddiv.id = "legenddiv";
-    legenddiv.innerHTML="";
+    legenddiv.innerHTML = "";
     legenddiv.setAttribute("style", "margin-left: 10px; ");
     footdiv.appendChild(legenddiv);
     //hotline copyright
     let hotlinecredit = document.createElement("span");
     hotlinecredit.id = "hotlinecredit";
-    hotlinecredit.innerHTML="&copy; <a href='https://iosphere.github.io/Leaflet.hotline/demo/' style='text-decoration:none; color:#0078A8' target='_blank'>Leaflet.hotline</a>";
+    hotlinecredit.innerHTML = "&copy; <a href='https://iosphere.github.io/Leaflet.hotline/demo/' style='text-decoration:none; color:#0078A8' target='_blank'>Leaflet.hotline</a>";
     hotlinecredit.setAttribute("style", "float:right; font-size:12;");
     footdiv.appendChild(hotlinecredit);
 
     //waiting for all scripts are ready and proceed initialization
-    window.scriptWaiting=setInterval(function(){ 
+    window.scriptWaiting = setInterval(function() {
         if (window.leafletLoaded && window.leafletHotlineLoaded) {
             clearInterval(window.scriptWaiting);
             mapInit();
         }
-     }, 500);
+    }, 500);
 }
 
 //Initialization of Leaflet Map
 function mapInit() {
 
     //Map Initialization
-    
+
     map = L.map('map');
     var osmLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
@@ -193,10 +192,10 @@ function convertGPX2data(gpx) {
         if (i == 0) {
             addOption("Elevetion", "ele");
         }
-        for (var j = 0; j < extensions.childNodes.length; j++) {
-            trkpt["" + extensions.childNodes[j].tagName] = extensions.childNodes[j].innerHTML;
+        for (var j = 0; j < extensions.children.length; j++) {
+            trkpt["" + extensions.children[j].tagName] = extensions.children[j].innerHTML;
             if (i == 0) {
-                addOption("" + extensions.childNodes[j].tagName, "" + extensions.childNodes[j].tagName);
+                addOption("" + extensions.children[j].tagName, "" + extensions.children[j].tagName);
             }
         }
         window.gpxdata.trkpts.push(trkpt);
@@ -233,7 +232,7 @@ function reDrawHotline() {
         }
     }
 
-    if(hotlineLayer!=null){
+    if (hotlineLayer != null) {
         map.removeLayer(hotlineLayer);
     }
     hotlineLayer = L.hotline(coords, {
@@ -256,53 +255,98 @@ function reDrawHotline() {
 
     //Legend
     let legenddiv = document.getElementById("legenddiv");
-    legenddiv.innerHTML = "Legend："
-                        +"<span style='display:inline-block;width:24px; background-color:"+MIN_COLOR+"'>&nbsp;</span>" 
-                        + _min
-                        + "　～　"
-                        +"<span style='display:inline-block;width:24px; background-color:"+MID_COLOR+"'>&nbsp;</span>"
-                        + calcMid(_min, _max)
-                        + "　～　"
-                        +"<span style='display:inline-block;width:24px; background-color:"+MAX_COLOR+"'>&nbsp;</span>" 
-                        + _max
+    var _step = Math.floor((_max - _min) * 1000) / 100000;
+    var tenpercent = (_max - _min) * 0.1;
+    legenddiv.innerHTML = "" +
+        "Min:<span style='display:inline-block;width:24px; background-color:" + MIN_COLOR + "'>&nbsp;</span>" +
+        "<input type='range' id='minrange' name='minrange' min='" + _min + "' max='" + (_max - tenpercent) + "' step='" + _step + "' value='" + _min + "' onchange='rangeChangeMin()'>" +
+        "<span id='minval'>" +
+        reasonableDigitStr(_min) +
+        "</span>" +
+        "　～　" +
+        "Mid:<span style='display:inline-block;width:24px; background-color:" + MID_COLOR + "'>&nbsp;</span>" +
+        "<span id='midval'>" +
+        calcMid(_min, _max) +
+        "</span>" +
+        "　～　" +
+        "Max:<span style='display:inline-block;width:24px; background-color:" + MAX_COLOR + "'>&nbsp;</span>" +
+        "<input type='range' id='maxrange' name='maxrange' min='" + (_min - 0 + tenpercent) + "' max='" + _max + "' step='" + _step + "' value='" + _max + "' onchange='rangeChangeMax()'>" +
+        "<span id='maxval'>" +
+        reasonableDigitStr(_max) +
+        "</span>"
+}
+
+function rangeChangeMin() {
+    var min = document.getElementById('minrange').value - 0;
+    var max = document.getElementById('maxrange').value - 0;
+    var tenpercent = (max - min) * 0.1;
+    if (max - tenpercent < min) {
+        document.getElementById('maxrange').value = min - 0 + tenpercent;
+    }
+    rangeChange();
+}
+
+function rangeChangeMax() {
+    var min = document.getElementById('minrange').value - 0;
+    var max = document.getElementById('maxrange').value - 0;
+    var tenpercent = (max - min) * 0.1;
+    if (max < min + tenpercent) {
+        document.getElementById('minrange').value = max - tenpercent;
+    }
+    rangeChange();
+}
+
+function rangeChange() {
+    var min = document.getElementById('minrange').value - 0;
+    var max = document.getElementById('maxrange').value - 0;
+    var style = { 'min': min, 'max': max };
+    hotlineLayer.setStyle(style).redraw();
+    document.getElementById('minval').innerHTML = reasonableDigitStr(min);
+    document.getElementById('maxval').innerHTML = reasonableDigitStr(max);
+    document.getElementById('midval').innerHTML = "" + (calcMid(min, max));
+}
+
+function reasonableDigitStr(num) {
+    var str = (num - 0).toPrecision(3);
+    return str;
 }
 
 //Helper function: to calculate "mid" value for legent.
-function calcMid(min, max){
-    min-=0;
-    max-=0;
-    var underDigitMin = (min+"").indexOf('.')<0?0:((min+"").length - (Math.floor(min)+"").length-1);
-    var underDigitMax = (max+"").indexOf('.')<0?0:((max+"").length - (Math.floor(max)+"").length-1);
-    var underDigit = underDigitMin>underDigitMax?underDigitMin:underDigitMax;
-    var mid = (min + max)/2;
-    return mid.toFixed(underDigit);
+function calcMid(min, max) {
+    min -= 0;
+    max -= 0;
+    var underDigitMin = (min + "").indexOf('.') < 0 ? 0 : ((min + "").length - (Math.floor(min) + "").length - 1);
+    var underDigitMax = (max + "").indexOf('.') < 0 ? 0 : ((max + "").length - (Math.floor(max) + "").length - 1);
+    var underDigit = underDigitMin > underDigitMax ? underDigitMin : underDigitMax;
+    var mid = ((min - 0) + (max - 0)) / 2;
+    return reasonableDigitStr(mid);
 }
 
 //Load GPX from URL location
-function loadGPX(url){
+function loadGPX(url) {
     let xhr = new XMLHttpRequest();
     xhr.open('GET', url);
     xhr.send();
     xhr.onload = function() {
-        if (xhr.status != 200) { 
-            alert("Error in Resding GPX"); 
+        if (xhr.status != 200) {
+            alert("Error in Resding GPX");
         } else {
-            document.getElementById('zAxis').innerHTML="";//Clear options
+            document.getElementById('zAxis').innerHTML = ""; //Clear options
             convertGPX2data(xhr.response);
         }
     };
     xhr.onerror = function() {
-        alert("Error in Resding GPX"); 
+        alert("Error in Resding GPX");
     };
 }
 
 //Load GPX from local machine
-function loadLocalGPX(event){
-        var fr = new FileReader();
-        fr.onload = function() {
-            convertGPX2data(fr.result);
-        }
-        fr.readAsText(event.target.files[0],"utf-8");
+function loadLocalGPX(event) {
+    var fr = new FileReader();
+    fr.onload = function() {
+        convertGPX2data(fr.result);
+    }
+    fr.readAsText(event.target.files[0], "utf-8");
 }
 
 //Set onload event to initialize
