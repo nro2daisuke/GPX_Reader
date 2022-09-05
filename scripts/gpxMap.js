@@ -274,6 +274,22 @@ function reDrawHotline() {
         "<span id='maxval'>" +
         reasonableDigitStr(_max) +
         "</span>"
+
+		//Restore
+		if(window.minRanges!=null){
+			if(window.minRanges[selectdZ]!=null){
+				document.getElementById('minrange').value = window.minRanges[selectdZ];
+				rangeChange();
+			}
+		}
+		if(window.maxRanges!=null){
+			if(window.maxRanges[selectdZ]!=null){
+				document.getElementById('maxrange').value = window.maxRanges[selectdZ];
+				rangeChange();
+			}
+		}
+
+
 }
 
 function rangeChangeMin() {
@@ -283,6 +299,11 @@ function rangeChangeMin() {
     if (max - tenpercent < min) {
         document.getElementById('maxrange').value = min - 0 + tenpercent;
     }
+	if(window.minRanges==null){
+		window.minRanges=new Object();
+	}
+	var selectdZ = document.getElementById('zAxis').value;
+	window.minRanges[selectdZ]=min;
     rangeChange();
 }
 
@@ -293,6 +314,11 @@ function rangeChangeMax() {
     if (max < min + tenpercent) {
         document.getElementById('minrange').value = max - tenpercent;
     }
+	if(window.maxRanges==null){
+		window.maxRanges=new Object();
+	}
+	var selectdZ = document.getElementById('zAxis').value;
+	window.maxRanges[selectdZ]=max;
     rangeChange();
 }
 
@@ -304,6 +330,7 @@ function rangeChange() {
     document.getElementById('minval').innerHTML = reasonableDigitStr(min);
     document.getElementById('maxval').innerHTML = reasonableDigitStr(max);
     document.getElementById('midval').innerHTML = "" + (calcMid(min, max));
+	
 }
 
 function reasonableDigitStr(num) {
