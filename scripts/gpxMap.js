@@ -371,6 +371,7 @@ function loadGPX(url) {
 function loadLocalGPX(event) {
     var fr = new FileReader();
     fr.onload = function() {
+	document.getElementById('zAxis').innerHTML = ""; //Clear options 20220921
         convertGPX2data(fr.result);
     }
     fr.readAsText(event.target.files[0], "utf-8");
